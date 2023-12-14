@@ -4,6 +4,9 @@
         <form @submit.prevent="check">
             <p>Email:</p>
             <input v-model="email" type="email" placeholder="email" />
+            <div v-for="(stat, idx) in status" :key="idx">
+                {{ stat.status }}
+            </div>
             <br>
             <br>
             <button type="submit">Check</button>
@@ -25,29 +28,34 @@
 export default {
     data() {
         return {
-            email: ''
+            email: '',
+            status: []
         }
     },
     methods: {
-        async get_account() {
-            const response = await fetch('http://localhost:3000/api/accounts', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            if (!response.ok) {
-                const errorMsg = (await response.json())?.errors[0].message
-                throw new Error(errorMsg)
-            }
+        async check() {
+            try {
+                const response = await fetch('http://localhost:3000/api/accounts?where[email][equals]=${this.email}', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                if (!response.ok) {
+                    const errorMsg = (await response.json())?.errors[0].message
+                    throw new Error(errorMsg)
+                }   
 
-            const data = await response.json();
-            this.accounts = data.docs;
-            console.log("[DEBUG]" + this.accounts);
+                const data = await response.json();
+                this.status = data.docs;
+                console.log(this.status);
+            } catch (error) {
+                console.error(error.message)
+            }
         }
     },
     mounted() {
-        this.get_account();
+        this.check();
     }
 }
 </script>
